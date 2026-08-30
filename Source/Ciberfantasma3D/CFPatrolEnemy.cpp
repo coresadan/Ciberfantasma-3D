@@ -207,7 +207,7 @@ float ACFPatrolEnemy::TakeDamage(float DamageAmount, const FDamageEvent& DamageE
         UNiagaraSystem* System = bBoss ? BossExplosionSystem.Get() : DeathSystem.Get();
         if (System)
         {
-            const FVector Scale = bBoss ? FVector(0.72f) : FVector(0.34f * ProfileScale);
+            const FVector Scale = bBoss ? FVector(0.44f) : FVector(0.2f * ProfileScale);
             UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, System,
                 GetActorLocation() + FVector(0.0f, 0.0f, 20.0f), FRotator::ZeroRotator, Scale);
         }

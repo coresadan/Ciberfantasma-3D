@@ -77,7 +77,7 @@ ACFPlayerCharacter::ACFPlayerCharacter()
         ShieldVisual->SetStaticMesh(ShieldSphere.Object);
     }
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> ShieldMaterial(
-        TEXT("/Game/Art/Materials/M_CF_Shield_V4.M_CF_Shield_V4"));
+        TEXT("/Game/Art/Materials/M_CF_Shield_V6.M_CF_Shield_V6"));
     if (ShieldMaterial.Succeeded())
     {
         ShieldVisual->SetMaterial(0, ShieldMaterial.Object);
@@ -96,6 +96,17 @@ ACFPlayerCharacter::ACFPlayerCharacter()
     MuzzleLight->SetAttenuationRadius(240.0f);
     MuzzleLight->SetIntensity(0.0f);
     MuzzleLight->CastShadows = false;
+
+    MuzzleFlashVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MuzzleFlashVisual"));
+    MuzzleFlashVisual->SetupAttachment(RootComponent);
+    MuzzleFlashVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    MuzzleFlashVisual->SetVisibility(false);
+    MuzzleFlashVisual->CastShadow = false;
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> MuzzleCone(TEXT("/Engine/BasicShapes/Cone.Cone"));
+    static ConstructorHelpers::FObjectFinder<UMaterialInterface> PulseCoreMaterial(
+        TEXT("/Game/Art/Materials/M_CF_Pulse_V6.M_CF_Pulse_V6"));
+    if (MuzzleCone.Succeeded()) MuzzleFlashVisual->SetStaticMesh(MuzzleCone.Object);
+    if (PulseCoreMaterial.Succeeded()) MuzzleFlashVisual->SetMaterial(0, PulseCoreMaterial.Object);
 
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> MuzzleFlashAsset(
         TEXT("/Game/Art/VFX/NS_MuzzleFlash_Runtime.NS_MuzzleFlash_Runtime"));
@@ -488,16 +499,30 @@ void ACFPlayerCharacter::UpdateCharacterPresentation(float DeltaSeconds)
     const FVector DesiredCameraOffset(LookAhead, 0.0f, 28.0f + CameraLandingOffset);
     CameraBoom->TargetOffset = FMath::VInterpTo(CameraBoom->TargetOffset, DesiredCameraOffset, DeltaSeconds, 5.5f);
 
-    if (ShieldVisual && IsShieldActive())
+    if (ShieldVisual && ShieldLight && IsShieldActive())
     {
-        const float Pulse = 1.0f + FMath::Sin(GetWorld()->GetTimeSeconds() * 11.0f) * 0.025f;
-        ShieldVisual->SetRelativeScale3D(FVector(1.18f, 0.86f, 1.82f) * Pulse);
+        const float Pulse = 0.5f + 0.5f * FMath::Sin(GetWorld()->GetTimeSeconds() * 9.0f);
+        ShieldVisual->SetRelativeScale3D(FVector(1.08f, 0.72f, 1.58f) * (1.0f + Pulse * 0.025f));
         ShieldVisual->AddLocalRotation(FRotator(0.0f, 38.0f * DeltaSeconds, 0.0f));
-        ShieldLight->SetIntensity(2300.0f + 500.0f * Pulse);
+        ShieldLight->SetIntensity(1700.0f + 420.0f * Pulse);
     }
     if (MuzzleLight)
     {
-        MuzzleLight->SetIntensity(MuzzleFlashRemaining > 0.0f ? 4200.0f : 0.0f);
+        MuzzleLight->SetIntensity(MuzzleFlashRemaining > 0.0f ? 3200.0f : 0.0f);
+    }
+    if (MuzzleFlashVisual)
+    {
+        const bool bFlashVisible = MuzzleFlashRemaining > 0.0f;
+        MuzzleFlashVisual->SetVisibility(bFlashVisible);
+        if (bFlashVisible)
+        {
+            const float LifeAlpha = FMath::Clamp(MuzzleFlashRemaining / 0.075f, 0.0f, 1.0f);
+            MuzzleFlashVisual->SetRelativeLocation(FVector(FacingDirection * 88.0f, -24.0f, 36.0f));
+            MuzzleFlashVisual->SetRelativeRotation(
+                FRotator(FacingDirection > 0.0f ? 90.0f : -90.0f, 0.0f, 0.0f));
+            MuzzleFlashVisual->SetRelativeScale3D(
+                FVector(0.08f, 0.08f, FMath::Lerp(0.22f, 0.38f, LifeAlpha)));
+        }
     }
 }
 
@@ -631,7 +656,7 @@ void ACFPlayerCharacter::FireInDirection(float Direction)
     if (MuzzleFlashSystem)
     {
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, MuzzleFlashSystem, SpawnLocation,
-            SpawnRotation, FVector(0.26f));
+            SpawnRotation, FVector(0.12f));
     }
     OnPulseFired();
 }
@@ -660,7 +685,7 @@ bool ACFPlayerCharacter::AbsorbProjectile(const FVector& ImpactLocation)
             ? GetActorLocation() + FVector(0.0f, 0.0f, 25.0f)
             : ImpactLocation;
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ShieldAbsorbSystem, SpawnLocation,
-            FRotator::ZeroRotator, FVector(0.38f));
+            FRotator::ZeroRotator, FVector(0.22f));
     }
     if (ACFGameState* State = GetWorld()->GetGameState<ACFGameState>())
     {

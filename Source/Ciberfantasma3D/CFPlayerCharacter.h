@@ -55,6 +55,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
     TObjectPtr<UPointLightComponent> MuzzleLight;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> MuzzleFlashVisual;
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|VFX")
     TObjectPtr<UNiagaraSystem> MuzzleFlashSystem;
 

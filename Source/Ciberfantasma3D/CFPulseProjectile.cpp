@@ -34,17 +34,26 @@ ACFPulseProjectile::ACFPulseProjectile()
         Visual->SetStaticMesh(SphereMesh.Object);
     }
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> PulseMaterial(
-        TEXT("/Game/Art/Materials/M_CF_Pulse_V4.M_CF_Pulse_V4"));
+        TEXT("/Game/Art/Materials/M_CF_Pulse_V6.M_CF_Pulse_V6"));
     if (PulseMaterial.Succeeded())
     {
         Visual->SetMaterial(0, PulseMaterial.Object);
     }
 
+    TrailVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TrailVisual"));
+    TrailVisual->SetupAttachment(Collision);
+    TrailVisual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    TrailVisual->SetRelativeLocation(FVector(-24.0f, 0.0f, 0.0f));
+    TrailVisual->SetRelativeScale3D(FVector(0.42f, 0.045f, 0.045f));
+    TrailVisual->CastShadow = false;
+    if (SphereMesh.Succeeded()) TrailVisual->SetStaticMesh(SphereMesh.Object);
+    if (PulseMaterial.Succeeded()) TrailVisual->SetMaterial(0, PulseMaterial.Object);
+
     PulseLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("PulseLight"));
     PulseLight->SetupAttachment(Collision);
     PulseLight->SetLightColor(FLinearColor(0.05f, 1.0f, 0.25f));
-    PulseLight->Intensity = 1200.0f;
-    PulseLight->AttenuationRadius = 240.0f;
+    PulseLight->Intensity = 820.0f;
+    PulseLight->AttenuationRadius = 190.0f;
 
     Movement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Movement"));
     Movement->UpdatedComponent = Collision;
@@ -86,7 +95,7 @@ void ACFPulseProjectile::HandleHit(UPrimitiveComponent* HitComponent, AActor* Ot
     if (ImpactSystem)
     {
         UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactSystem, Hit.ImpactPoint,
-            Hit.ImpactNormal.Rotation(), FVector(0.32f));
+            Hit.ImpactNormal.Rotation(), FVector(0.18f));
     }
 
     UGameplayStatics::ApplyPointDamage(OtherActor, Damage, GetActorForwardVector(), Hit,

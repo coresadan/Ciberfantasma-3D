@@ -31,6 +31,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
     TObjectPtr<UStaticMeshComponent> Visual;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|VFX")
+    TObjectPtr<UStaticMeshComponent> TrailVisual;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
     TObjectPtr<UPointLightComponent> PulseLight;
 

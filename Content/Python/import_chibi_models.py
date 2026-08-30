@@ -6,6 +6,7 @@ import unreal
 
 PROJECT_ROOT = Path(unreal.Paths.project_dir())
 FBX_ROOT = PROJECT_ROOT / "SourceAssets" / "FBX"
+MATERIAL_VERSION = 6
 
 ASSETS = {
     "SM_Ciberfantasma_Chibi": "/Game/Art/Characters",
@@ -40,11 +41,11 @@ ANIMATIONS = (
 
 MATERIALS = {
     # Linear-space values calibrated against the fixed-exposure gameplay camera.
-    "M_CF_Hood": ((0.004, 0.007, 0.012), 0.0, 0.46, None),
-    "M_CF_Armor": ((0.015, 0.022, 0.032), 0.52, 0.32, None),
-    "M_CF_Bone": ((0.42, 0.45, 0.44), 0.0, 0.3, None),
-    "M_CF_Green": ((0.001, 0.34, 0.006), 0.06, 0.22, ((0.0, 0.45, 0.005), 0.8)),
-    "M_CF_Visor": ((0.001, 0.003, 0.004), 0.1, 0.08, None),
+    "M_CF_Hood": ((0.009, 0.014, 0.023), 0.05, 0.48, None),
+    "M_CF_Armor": ((0.035, 0.048, 0.068), 0.68, 0.26, None),
+    "M_CF_Bone": ((0.62, 0.66, 0.65), 0.04, 0.24, None),
+    "M_CF_Green": ((0.002, 0.42, 0.009), 0.08, 0.18, ((0.0, 0.62, 0.008), 7.0)),
+    "M_CF_Visor": ((0.0005, 0.001, 0.002), 0.18, 0.045, None),
     "M_Warden_Ivory": ((0.48, 0.44, 0.36), 0.7, 0.24, None),
     "M_Enemy_Dark": ((0.02, 0.028, 0.045), 0.8, 0.22, None),
     "M_Enemy_Red": ((0.5, 0.003, 0.015), 0.48, 0.16, ((1.0, 0.005, 0.02), 12.0)),
@@ -91,7 +92,7 @@ def create_material(name, settings):
     package = "/Game/Art/Materials"
     # UE 5.8 commandlets can assert while deleting rooted material expressions.
     # Version generated materials instead of mutating their expression graph in-place.
-    asset_name = f"{name}_V5"
+    asset_name = f"{name}_V{MATERIAL_VERSION}"
     asset_path = f"{package}/{asset_name}"
     existing = unreal.load_asset(asset_path)
     if existing:
@@ -146,10 +147,11 @@ def create_effect_materials():
     """Create lightweight runtime materials for the pulse and shield presentation."""
     package = "/Game/Art/Materials"
 
-    pulse = unreal.load_asset(f"{package}/M_CF_Pulse_V4")
+    pulse_name = f"M_CF_Pulse_V{MATERIAL_VERSION}"
+    pulse = unreal.load_asset(f"{package}/{pulse_name}")
     if not pulse:
         pulse = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
-            "M_CF_Pulse_V4", package, unreal.Material, unreal.MaterialFactoryNew()
+            pulse_name, package, unreal.Material, unreal.MaterialFactoryNew()
         )
         pulse.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
         color = unreal.MaterialEditingLibrary.create_material_expression(
@@ -159,7 +161,7 @@ def create_effect_materials():
         strength = unreal.MaterialEditingLibrary.create_material_expression(
             pulse, unreal.MaterialExpressionConstant, -240, 100
         )
-        strength.set_editor_property("r", 18.0)
+        strength.set_editor_property("r", 30.0)
         multiply = unreal.MaterialEditingLibrary.create_material_expression(
             pulse, unreal.MaterialExpressionMultiply, 0, 20
         )
@@ -171,10 +173,11 @@ def create_effect_materials():
         unreal.MaterialEditingLibrary.recompile_material(pulse)
         unreal.EditorAssetLibrary.save_loaded_asset(pulse)
 
-    shield = unreal.load_asset(f"{package}/M_CF_Shield_V4")
+    shield_name = f"M_CF_Shield_V{MATERIAL_VERSION}"
+    shield = unreal.load_asset(f"{package}/{shield_name}")
     if not shield:
         shield = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
-            "M_CF_Shield_V4", package, unreal.Material, unreal.MaterialFactoryNew()
+            shield_name, package, unreal.Material, unreal.MaterialFactoryNew()
         )
         shield.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
         shield.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
@@ -197,7 +200,7 @@ def create_effect_materials():
         opacity_strength = unreal.MaterialEditingLibrary.create_material_expression(
             shield, unreal.MaterialExpressionConstant, -220, 100
         )
-        opacity_strength.set_editor_property("r", 0.32)
+        opacity_strength.set_editor_property("r", 0.22)
         opacity = unreal.MaterialEditingLibrary.create_material_expression(
             shield, unreal.MaterialExpressionMultiply, 20, 80
         )

@@ -339,6 +339,16 @@ def build_ciberfantasma(materials):
                 (side * (33 + offset), -35.2 + trace, 130),
                 (side * (37 + offset), -32.0 + trace, 123)
             ], 0.65, green)
+        # Temple hardware breaks the spherical hood silhouette and gives the mask
+        # a believable layered mounting point.
+        cylinder(p + f"TempleDisc{side}", (side * 35.5, -38.0, 128), 4.6, 3.2,
+                 armor, (math.radians(90), 0.0, 0.0), vertices=32, bevel=0.7)
+        cylinder(p + f"TempleCore{side}", (side * 35.5, -40.0, 128), 2.0, 3.8,
+                 green, (math.radians(90), 0.0, 0.0), vertices=24, bevel=0.45)
+    # A separate lower hood skirt keeps the head from reading as a bare sphere.
+    prism_xz(p + "HoodJawSkirt", [(-34, 112), (-29, 101), (-18, 94), (0, 91),
+                                    (18, 94), (29, 101), (34, 112), (25, 105),
+                                    (0, 99), (-25, 105)], -27.0, 6.0, hood, 1.6)
 
     # Compact armoured torso with the V-shaped layered plate language of the reference.
     sphere(p + "TorsoCore", (0, 0, 78), (29, 20, 31), hood, 40, 26)
@@ -376,6 +386,14 @@ def build_ciberfantasma(materials):
     cube(p + "Belt", (0, 0, 54), (23, 20, 4), hood, 1.8)
     prism_xz(p + "BeltGlow", [(-5, 58), (5, 58), (6, 54), (0, 52), (-6, 54)],
              -22.5, 3.0, green, 0.6)
+    # Overlapping sternum and abdominal inserts add readable parallax at
+    # gameplay distance without relying on a baked normal map.
+    prism_xz(p + "SternumInset", [(-2.8, 88), (0, 91), (2.8, 88), (2.2, 82),
+                                    (0, 79.5), (-2.2, 82)], -30.8, 2.2, hood, 0.5)
+    for side in (-1, 1):
+        for index, z in enumerate((77, 70, 63)):
+            cube(p + f"AbFastener{side}_{index}", (side * (10.5 - index), -28.0, z),
+                 (0.9, 0.8, 0.9), green, 0.32)
 
     # Broad shoulders, short limbs and large hands/boots preserve chibi weight.
     for side in (-1, 1):
@@ -400,7 +418,12 @@ def build_ciberfantasma(materials):
         for finger in range(3):
             cube(p + f"Knuckle{side}_{finger}",
                  (side * (34 + finger * 4), -17.5, 45), (2.0, 2.0, 2.0), armor, 0.8)
+            cube(p + f"FingerPlate{side}_{finger}",
+                 (side * (34 + finger * 4), -18.0, 41.5), (1.65, 1.7, 1.5), armor, 0.55)
         cube(p + f"ForearmGlow{side}", (side * 39, -16, 57), (4.5, 1.2, 2.0), green, 0.5)
+        # Flexible dark joint collars hide hard intersections during bending.
+        ring(p + f"ElbowSeal{side}", (side * 38, -2, 64), 7.4, 1.15, hood,
+             (0.0, math.radians(90), 0.0))
 
         sphere(p + f"Hip{side}", (side * 14, 0, 50), (13, 12, 13), armor, 26, 16)
         capsule_between(p + f"Thigh{side}", (side * 14, 0, 47), (side * 15, 0, 29), 10.5, hood)
@@ -429,6 +452,10 @@ def build_ciberfantasma(materials):
         sphere(p + f"Boot{side}", (side * 15, -6, 8), (14, 17, 9), hood, 28, 16)
         sphere(p + f"BootToe{side}", (side * 15, -20, 7), (12, 9, 6), armor, 24, 14)
         cube(p + f"BootSole{side}", (side * 15, -7, 2), (15, 19, 2.2), hood, 1.4)
+        cube(p + f"BootHeel{side}", (side * 15, 8, 5), (11.5, 7.0, 5.0), armor, 1.2)
+        for tread in (-18, -8, 2, 10):
+            cube(p + f"BootTread{side}_{tread}", (side * 15, tread, -0.3),
+                 (11.5, 2.0, 1.0), armor, 0.35)
         cube(p + f"BootGlowOuter{side}", (side * 20, -28.0, 8), (2.8, 0.8, 1.0), green, 0.35,
              (0.0, 0.0, side * math.radians(-18)))
         cube(p + f"BootGlowInner{side}", (side * 11, -28.0, 8), (2.8, 0.8, 1.0), green, 0.35,
@@ -568,38 +595,77 @@ def rig_player(mesh):
     armature.select_set(False)
 
     groups = {name: mesh.vertex_groups.new(name=name) for name in definitions}
+
+    def normalized_weights(vertex_index, weighted_bones):
+        valid = [(name, max(0.0, weight)) for name, weight in weighted_bones if weight > 0.0001]
+        total = sum(weight for _, weight in valid)
+        for name, weight in valid:
+            groups[name].add([vertex_index], weight / total, "REPLACE")
+
+    def transition(value, lower, upper):
+        alpha = max(0.0, min(1.0, (value - lower) / (upper - lower)))
+        return alpha * alpha * (3.0 - 2.0 * alpha)
+
     for vertex in mesh.data.vertices:
         x, y, z = vertex.co
         side = "l" if x < 0 else "r"
         if z >= 108:
-            bone_name = "head"
-        elif abs(x) >= 25 and z >= 84:
-            bone_name = f"clavicle_{side}"
-        elif x < -31 and y < -9 and 49 <= z <= 66:
-            bone_name = "weapon_l"
-        elif abs(x) >= 27 and z >= 65:
-            bone_name = f"upperarm_{side}"
-        elif abs(x) >= 27 and z >= 47:
-            bone_name = f"lowerarm_{side}"
-        elif abs(x) >= 27:
-            bone_name = f"hand_{side}"
-        elif z < 8 and y < -13 and abs(x) > 2:
-            bone_name = f"toe_{side}"
-        elif z < 12 and abs(x) > 2:
-            bone_name = f"foot_{side}"
-        elif z < 30 and abs(x) > 3:
-            bone_name = f"calf_{side}"
-        elif z < 55 and abs(x) > 3:
-            bone_name = f"thigh_{side}"
+            normalized_weights(vertex.index, [("head", 1.0)])
+        elif abs(x) >= 27 and z >= 39:
+            if x < -31 and y < -9 and 50 <= z <= 66:
+                normalized_weights(vertex.index, [("weapon_l", 0.88), ("lowerarm_l", 0.12)])
+            elif z >= 87:
+                normalized_weights(vertex.index, [(f"clavicle_{side}", 1.0)])
+            elif z >= 82:
+                alpha = transition(z, 82.0, 87.0)
+                normalized_weights(vertex.index, [(f"upperarm_{side}", 1.0 - alpha),
+                                                   (f"clavicle_{side}", alpha)])
+            elif z >= 69:
+                normalized_weights(vertex.index, [(f"upperarm_{side}", 1.0)])
+            elif z >= 61:
+                alpha = transition(z, 61.0, 69.0)
+                normalized_weights(vertex.index, [(f"lowerarm_{side}", 1.0 - alpha),
+                                                   (f"upperarm_{side}", alpha)])
+            elif z >= 50:
+                normalized_weights(vertex.index, [(f"lowerarm_{side}", 1.0)])
+            elif z >= 44:
+                alpha = transition(z, 44.0, 50.0)
+                normalized_weights(vertex.index, [(f"hand_{side}", 1.0 - alpha),
+                                                   (f"lowerarm_{side}", alpha)])
+            else:
+                normalized_weights(vertex.index, [(f"hand_{side}", 1.0)])
+        elif abs(x) > 4 and z < 59:
+            if z >= 50:
+                alpha = transition(z, 50.0, 57.0)
+                normalized_weights(vertex.index, [(f"thigh_{side}", 1.0 - alpha), ("pelvis", alpha)])
+            elif z >= 34:
+                normalized_weights(vertex.index, [(f"thigh_{side}", 1.0)])
+            elif z >= 26:
+                alpha = transition(z, 26.0, 34.0)
+                normalized_weights(vertex.index, [(f"calf_{side}", 1.0 - alpha),
+                                                   (f"thigh_{side}", alpha)])
+            elif z >= 14:
+                normalized_weights(vertex.index, [(f"calf_{side}", 1.0)])
+            elif z >= 8:
+                alpha = transition(z, 8.0, 14.0)
+                normalized_weights(vertex.index, [(f"foot_{side}", 1.0 - alpha),
+                                                   (f"calf_{side}", alpha)])
+            elif y < -13:
+                alpha = transition(-y, 13.0, 24.0)
+                normalized_weights(vertex.index, [(f"foot_{side}", 1.0 - alpha),
+                                                   (f"toe_{side}", alpha)])
+            else:
+                normalized_weights(vertex.index, [(f"foot_{side}", 1.0)])
         elif z < 64:
-            bone_name = "pelvis"
+            normalized_weights(vertex.index, [("pelvis", 1.0)])
         elif z < 81:
-            bone_name = "spine_01"
+            alpha = transition(z, 75.0, 81.0)
+            normalized_weights(vertex.index, [("spine_01", 1.0 - alpha), ("spine_02", alpha)])
         elif z < 101:
-            bone_name = "spine_02"
+            normalized_weights(vertex.index, [("spine_02", 1.0)])
         else:
-            bone_name = "neck"
-        groups[bone_name].add([vertex.index], 1.0, "REPLACE")
+            alpha = transition(z, 101.0, 108.0)
+            normalized_weights(vertex.index, [("neck", 1.0 - alpha), ("head", alpha)])
 
     modifier = mesh.modifiers.new("CiberfantasmaRig", "ARMATURE")
     modifier.object = armature
@@ -711,6 +777,8 @@ def build_player_actions(armature):
             "upperarm_r": {"rotation": (0, 0, -arm_l)},
             "lowerarm_l": {"rotation": (0, 0, -18 - arm_l * 0.22)},
             "lowerarm_r": {"rotation": (0, 0, 18 + arm_l * 0.22)},
+            "hand_l": {"rotation": (0, -roll * 0.7, -arm_l * 0.08)},
+            "hand_r": {"rotation": (0, roll * 0.7, arm_l * 0.08)},
         })
 
     new_action("A_Ciberfantasma_Pro_JumpStart", 12)
@@ -818,6 +886,9 @@ def build_player_actions(armature):
             "upperarm_l": {"rotation": (0, 0, -30 - bend)}, "upperarm_r": {"rotation": (0, 0, 30 + bend)},
             "lowerarm_l": {"rotation": (0, 0, -18)}, "lowerarm_r": {"rotation": (0, 0, 18)},
         })
+    # Blender 5.x stores action curves in layered channel bags. Key insertion
+    # already creates Bezier interpolation; leave those authored defaults intact
+    # so the same generator remains compatible with 4.x and 5.x.
     return actions
 
 
@@ -1232,7 +1303,7 @@ def build():
 
     scene["cf_source_project"] = r"D:\Trabajo\Ciberfantasma Bros"
     scene["cf_character_height_cm"] = 160.0
-    scene["cf_asset_status"] = "modeled and exported – nine enemy types"
+    scene["cf_asset_status"] = "hero v2 smooth skinning and authored motion; nine enemy types"
     scene["cf_enemy_count"] = len(enemy_models)
     BLENDER_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(BLENDER_OUTPUT), compress=True)
