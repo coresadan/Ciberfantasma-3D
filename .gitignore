@@ -1,0 +1,9 @@
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Builds/
+.vs/
+*.sln
+Content/__ExternalActors__/
+Content/__ExternalObjects__/
