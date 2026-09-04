@@ -10,7 +10,7 @@ Recreación independiente en Unreal Engine de `El Ciberfantasma: Código Libre` 
 - Tres fragmentos obligatorios por acto; los portales de jefe también exigen derrotar al jefe.
 - Puntuación persistente entre actos por fragmentos, terminales, enemigos, jefes y bloqueos con escudo.
 - HUD con salud, fragmentos, puntos, carga de escudo, objetivo, mensajes de nivel, victoria y derrota.
-- Protagonista chibi como Skeletal Mesh profesional de 23 huesos, con diez clips de juego: reposo, carrera, inicio/subida/caída de salto, aterrizaje, agachado, disparo, escudo e impacto.
+- Protagonista chibi como Skeletal Mesh profesional de 26 huesos, con catorce clips de juego: reposo, arranque/ciclo/frenada de carrera, inicio/subida/caída de salto, aterrizaje, agachado, marcha agachada, disparo normal/contralateral, escudo e impacto.
 - Presentación reactiva enlazada a la física: velocidad de carrera variable, lectura separada de salto y caída, aterrizaje, inclinación de avance, anticipación de cámara, retroceso de disparo y escudo 3D emisivo.
 - **9 perfiles chibi de enemigo** sobre 8 meshes únicos: bot, drone, crawler, harvester, enforcer, auditor, CEO-9000 y Director. Cada tipo tiene forma, paleta y luz de acento propias. `ApplyProfile()` selecciona mesh, escala, salud, velocidad y color desde un catálogo de referencias duras compatible con el cooker.
 - Escenarios con tres planos de profundidad, fachadas, skyline, ventanas, cornisas, antenas, climatización, barandillas y neón temático en los nueve actos.
@@ -62,10 +62,25 @@ La auditoría profunda carga los nueve mapas dentro de Unreal y compara sus acto
 F:\Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe .\Ciberfantasma3D.uproject -run=pythonscript "-script=Content\Python\audit_campaign.py" -unattended -nop4 -nosplash
 ```
 
-La auditoría del héroe comprueba el esqueleto, los cinco materiales y las diez secuencias:
+La auditoría del héroe comprueba el esqueleto, los seis materiales, las catorce secuencias y el Control Rig bilateral de pies:
 
 ```powershell
 F:\Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe .\Ciberfantasma3D.uproject -run=pythonscript "-script=Content\Python\audit_hero_assets.py" -unattended -nop4 -nosplash
+```
+
+Antes de importar, Blender valida cada fotograma y los contactos principales de locomoción:
+
+```powershell
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" .\SourceAssets\Blender\CF_Character_Workfile.blend --background --python .\Scripts\audit_hero_animation_bounds.py
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" .\SourceAssets\Blender\CF_Character_Workfile.blend --background --python .\Scripts\audit_hero_foot_contacts.py
+```
+
+El generador produce además ocho mapas PBR/normal de 2048×2048 para capucha, traje, armadura y máscara; `verify_project.ps1` valida sus cabeceras PNG para evitar reducciones accidentales de resolución.
+
+El solve final de IK se valida dentro del juego con dos trazas, compensación de pelvis y límites numéricos:
+
+```powershell
+F:\Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe .\Ciberfantasma3D.uproject -game -CFAutomatedFootIKTest -unattended -nullrhi -nosound
 ```
 
 La auditoría VFX rechaza sistemas vacíos y comprueba la versión de los cinco efectos runtime:

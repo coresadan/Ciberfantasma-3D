@@ -12,6 +12,7 @@ public class Ciberfantasma3D : ModuleRules
             "Engine",
             "InputCore",
             "AnimGraphRuntime",
+            "AnimationCore",
             "Niagara"
         });
     }

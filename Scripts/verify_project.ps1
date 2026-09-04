@@ -20,23 +20,40 @@ $requiredFiles = @(
     'Config\DefaultInput.ini',
     'Design\campaign_levels.json',
     'Scripts\export_canvas_levels.mjs',
+    'Scripts\audit_hero_animation_bounds.py',
+    'Scripts\audit_hero_foot_contacts.py',
+    'Content\Python\create_hero_foot_control_rig.py',
     'Content\Python\build_campaign.py',
     'Content\Python\audit_campaign.py',
     'Content\Python\audit_hero_assets.py',
+    'Content\Python\audit_world_art.py',
     'Content\Python\audit_vfx_assets.py',
     'Content\Python\create_vfx_assets.py',
     'Content\Python\import_chibi_models.py',
+    'Content\Python\upgrade_world_art.py',
     'SourceAssets\FBX\SK_Ciberfantasma_Chibi_Pro.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Idle.fbx',
+    'SourceAssets\FBX\A_Ciberfantasma_Pro_RunStart.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Run.fbx',
+    'SourceAssets\FBX\A_Ciberfantasma_Pro_RunStop.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_JumpStart.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_JumpRise.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_JumpFall.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Land.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Crouch.fbx',
+    'SourceAssets\FBX\A_Ciberfantasma_Pro_CrouchWalk.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Fire.fbx',
+    'SourceAssets\FBX\A_Ciberfantasma_Pro_FireBack.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Shield.fbx',
     'SourceAssets\FBX\A_Ciberfantasma_Pro_Hit.fbx',
+    'SourceAssets\Textures\Hero\T_CF_Hood_RMA.png',
+    'SourceAssets\Textures\Hero\T_CF_Hood_Normal.png',
+    'SourceAssets\Textures\Hero\T_CF_Undersuit_RMA.png',
+    'SourceAssets\Textures\Hero\T_CF_Undersuit_Normal.png',
+    'SourceAssets\Textures\Hero\T_CF_Armor_RMA.png',
+    'SourceAssets\Textures\Hero\T_CF_Armor_Normal.png',
+    'SourceAssets\Textures\Hero\T_CF_Bone_RMA.png',
+    'SourceAssets\Textures\Hero\T_CF_Bone_Normal.png',
     'SourceAssets\FBX\SM_LicenseWarden_Chibi.fbx',
     'SourceAssets\FBX\SM_PanopticonDrone_Chibi.fbx',
     'SourceAssets\FBX\SM_BotGround_Chibi.fbx',
@@ -48,15 +65,34 @@ $requiredFiles = @(
     'SourceAssets\FBX\SM_Director_Chibi.fbx',
     'Content\Art\Characters\SK_Ciberfantasma_Chibi_Pro.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Idle.uasset',
+    'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_RunStart.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Run.uasset',
+    'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_RunStop.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_JumpStart.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_JumpRise.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_JumpFall.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Land.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Crouch.uasset',
+    'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_CrouchWalk.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Fire.uasset',
+    'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_FireBack.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Shield.uasset',
     'Content\Art\Characters\Animations\A_Ciberfantasma_Pro_Hit.uasset',
+    'Content\Art\Characters\Rigs\CR_Ciberfantasma_FootIK.uasset',
+    'Content\Art\Materials\M_CF_Hood_V12.uasset',
+    'Content\Art\Materials\M_CF_Undersuit_V12.uasset',
+    'Content\Art\Materials\M_CF_Armor_V12.uasset',
+    'Content\Art\Materials\M_CF_Bone_V12.uasset',
+    'Content\Art\Materials\M_CF_Green_V12.uasset',
+    'Content\Art\Materials\M_CF_Visor_V12.uasset',
+    'Content\Art\Textures\Hero\T_CF_Hood_RMA.uasset',
+    'Content\Art\Textures\Hero\T_CF_Hood_Normal.uasset',
+    'Content\Art\Textures\Hero\T_CF_Undersuit_RMA.uasset',
+    'Content\Art\Textures\Hero\T_CF_Undersuit_Normal.uasset',
+    'Content\Art\Textures\Hero\T_CF_Armor_RMA.uasset',
+    'Content\Art\Textures\Hero\T_CF_Armor_Normal.uasset',
+    'Content\Art\Textures\Hero\T_CF_Bone_RMA.uasset',
+    'Content\Art\Textures\Hero\T_CF_Bone_Normal.uasset',
     'Content\Art\Enemies\SM_LicenseWarden_Chibi.uasset',
     'Content\Art\Enemies\SM_PanopticonDrone_Chibi.uasset',
     'Content\Art\Enemies\SM_BotGround_Chibi.uasset',
@@ -75,6 +111,7 @@ $requiredFiles = @(
     'Source\Ciberfantasma3D\CFGameState.cpp',
     'Source\Ciberfantasma3D\CFHUD.cpp',
     'Source\Ciberfantasma3D\CFPlayerCharacter.cpp',
+    'Source\Ciberfantasma3D\CFHeroAnimInstance.cpp',
     'Source\Ciberfantasma3D\CFPulseProjectile.cpp',
     'Source\Ciberfantasma3D\CFEnemyProjectile.cpp',
     'Source\Ciberfantasma3D\CFPatrolEnemy.cpp',
@@ -92,6 +129,30 @@ foreach ($relativePath in $requiredFiles) {
     $fullPath = Join-Path $projectRoot $relativePath
     if (-not (Test-Path -LiteralPath $fullPath)) {
         throw "Missing required file: $relativePath"
+    }
+}
+
+# PNG dimensions live as big-endian uint32 values in the IHDR header.  Enforce
+# the authored 2K source contract without relying on optional image libraries.
+foreach ($surface in @('Hood', 'Undersuit', 'Armor', 'Bone')) {
+    foreach ($suffix in @('RMA', 'Normal')) {
+        $relativeTexturePath = "SourceAssets\Textures\Hero\T_CF_${surface}_${suffix}.png"
+        $texturePath = Join-Path $projectRoot $relativeTexturePath
+        $stream = [System.IO.File]::OpenRead($texturePath)
+        try {
+            $header = [byte[]]::new(24)
+            if ($stream.Read($header, 0, $header.Length) -ne $header.Length) {
+                throw "Invalid PNG header: $relativeTexturePath"
+            }
+        }
+        finally {
+            $stream.Dispose()
+        }
+        $width = [System.Net.IPAddress]::NetworkToHostOrder([BitConverter]::ToInt32($header, 16))
+        $height = [System.Net.IPAddress]::NetworkToHostOrder([BitConverter]::ToInt32($header, 20))
+        if ($width -ne 2048 -or $height -ne 2048) {
+            throw "Hero surface texture must be 2048x2048, found ${width}x${height}: $relativeTexturePath"
+        }
     }
 }
 
@@ -133,13 +194,17 @@ if ($playerSource -notmatch [regex]::Escape('SK_Ciberfantasma_Chibi_Pro.SK_Ciber
 }
 foreach ($animation in @(
     'A_Ciberfantasma_Pro_Idle',
+    'A_Ciberfantasma_Pro_RunStart',
     'A_Ciberfantasma_Pro_Run',
+    'A_Ciberfantasma_Pro_RunStop',
     'A_Ciberfantasma_Pro_JumpStart',
     'A_Ciberfantasma_Pro_JumpRise',
     'A_Ciberfantasma_Pro_JumpFall',
     'A_Ciberfantasma_Pro_Land',
     'A_Ciberfantasma_Pro_Crouch',
+    'A_Ciberfantasma_Pro_CrouchWalk',
     'A_Ciberfantasma_Pro_Fire',
+    'A_Ciberfantasma_Pro_FireBack',
     'A_Ciberfantasma_Pro_Shield',
     'A_Ciberfantasma_Pro_Hit'
 )) {
@@ -147,9 +212,14 @@ foreach ($animation in @(
         throw "The player is missing animation reference: $animation"
     }
 }
-foreach ($vfxReference in @('NS_MuzzleFlash_Runtime', 'NS_ShieldAbsorb_Runtime')) {
+foreach ($vfxReference in @('NS_ShieldAbsorb_Runtime')) {
     if ($playerSource -notmatch [regex]::Escape($vfxReference)) {
         throw "The player is missing runtime VFX reference: $vfxReference"
+    }
+}
+foreach ($attachedFlashReference in @('MuzzleFlashVisual', 'M_CF_Pulse_V9')) {
+    if ($playerSource -notmatch [regex]::Escape($attachedFlashReference)) {
+        throw "The player is missing attached muzzle presentation: $attachedFlashReference"
     }
 }
 if ($projectileSource -notmatch [regex]::Escape('NS_PulseImpact_Runtime')) {

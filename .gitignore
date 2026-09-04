@@ -7,3 +7,5 @@ Builds/
 *.sln
 Content/__ExternalActors__/
 Content/__ExternalObjects__/
+__pycache__/
+*.pyc

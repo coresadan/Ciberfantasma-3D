@@ -23,6 +23,16 @@ ENEMY_HEIGHT = {
 }
 FLYING = {"drone", "harvester"}
 
+# Optional upper-route platforms turn flat hazard gaps into short traversal
+# choices. They never replace the Canvas route, so the original difficulty and
+# speedrun line remain intact.
+ADVENTURE_ROUTE_HAZARDS = {
+    0: (1, 3),
+    2: (0, 2),
+    6: (1, 3, 5),
+    8: (0, 2),
+}
+
 
 def project_path(*parts):
     return os.path.join(unreal.Paths.project_dir(), *parts)
@@ -47,7 +57,9 @@ def source_to_world(x, y, z_offset=0.0):
 def create_material(name, color, metallic=0.0, roughness=0.55, emissive=0.0):
     package = "/Game/Campaign/Materials"
     asset_path = f"{package}/{name}"
-    existing = unreal.load_asset(asset_path)
+    # Avoid emitting a warning for every first-time generated material. Missing
+    # assets are expected here and immediately created below.
+    existing = unreal.load_asset(asset_path) if unreal.EditorAssetLibrary.does_asset_exist(asset_path) else None
     if existing:
         return existing
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
@@ -203,7 +215,17 @@ def build_map(level_index, data, classes, assets, materials):
         trim_scale = unreal.Vector(width * PIXEL_TO_CM / 100.0, 0.14, 0.1)
         spawn_mesh(actors, assets["cube"], trim_mat, f"PlatformTrim_{index:02d}", trim_location, trim_scale, "CF_Trim")
 
-    for index, values in enumerate(data.get("moving", [])):
+    moving_platforms = list(data.get("moving", []))
+    for route_index, hazard_index in enumerate(ADVENTURE_ROUTE_HAZARDS.get(level_index, ())):
+        hazard_x, hazard_y, hazard_width, _ = data["hazards"][hazard_index][:4]
+        route_width = min(150.0, max(108.0, hazard_width * 0.82))
+        route_x = hazard_x + (hazard_width - route_width) * 0.5
+        route_y = hazard_y - 145.0 - (route_index % 2) * 42.0
+        mode = "h" if route_index % 2 == 0 else "v"
+        movement_range = 48.0 + level_index * 4.0
+        moving_platforms.append([route_x, route_y, route_width, 20.0, mode, movement_range])
+
+    for index, values in enumerate(moving_platforms):
         x, y, width, height, mode, movement_range = values
         platform = actors.spawn_actor_from_class(classes["moving"], source_to_world(x + width * 0.5, y + height * 0.5))
         platform.set_actor_label(f"MovingPlatform_{index:02d}")
@@ -225,6 +247,7 @@ def build_map(level_index, data, classes, assets, materials):
         hazard = actors.spawn_actor_from_class(classes["hazard"], source_to_world(x + width * 0.5, y + height * 0.5))
         hazard.set_actor_label(f"Hazard_{index:02d}_{values[4] if len(values) > 4 else 'spikes'}")
         hazard.set_actor_scale3d(unreal.Vector(width * PIXEL_TO_CM / 100.0, 2.0, height * PIXEL_TO_CM / 100.0))
+        hazard.set_editor_property("hazard_style", unreal.Name(values[4] if len(values) > 4 else "spikes"))
 
     for index, (x, y) in enumerate(data["shards"]):
         shard = actors.spawn_actor_from_class(classes["shard"], source_to_world(x + 17.0, y + 20.0))

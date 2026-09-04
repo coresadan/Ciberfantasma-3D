@@ -34,7 +34,7 @@ ACFPulseProjectile::ACFPulseProjectile()
         Visual->SetStaticMesh(SphereMesh.Object);
     }
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> PulseMaterial(
-        TEXT("/Game/Art/Materials/M_CF_Pulse_V6.M_CF_Pulse_V6"));
+        TEXT("/Game/Art/Materials/M_CF_Pulse_V9.M_CF_Pulse_V9"));
     if (PulseMaterial.Succeeded())
     {
         Visual->SetMaterial(0, PulseMaterial.Object);

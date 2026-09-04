@@ -5,6 +5,7 @@
 #include "CFMovingPlatform.generated.h"
 
 class UBoxComponent;
+class UPointLightComponent;
 class UStaticMeshComponent;
 
 UCLASS()
@@ -33,5 +34,9 @@ private:
     TObjectPtr<UBoxComponent> Collision;
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> Visual;
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UStaticMeshComponent> Accent;
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UPointLightComponent> Glow;
     FVector Origin;
 };

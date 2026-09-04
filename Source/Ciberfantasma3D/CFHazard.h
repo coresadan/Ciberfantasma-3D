@@ -16,6 +16,11 @@ class CIBERFANTASMA3D_API ACFHazard : public AActor
 
 public:
     ACFHazard();
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaSeconds) override;
+
+    UPROPERTY(EditAnywhere, Category = "Hazard")
+    FName HazardStyle = TEXT("spikes");
 
 private:
     UFUNCTION()
@@ -28,6 +33,12 @@ private:
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UStaticMeshComponent> Visual;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UStaticMeshComponent> DetailA;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UStaticMeshComponent> DetailB;
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UPointLightComponent> Glow;

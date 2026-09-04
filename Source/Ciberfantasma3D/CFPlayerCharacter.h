@@ -8,7 +8,7 @@ class ACFPulseProjectile;
 class UCameraComponent;
 class USpringArmComponent;
 class UAnimSequence;
-class UAnimSequencerInstance;
+class UCFHeroAnimInstance;
 class UPointLightComponent;
 class UStaticMeshComponent;
 class UNiagaraSystem;
@@ -50,6 +50,24 @@ protected:
     TObjectPtr<UStaticMeshComponent> ShieldVisual;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> ShieldInnerVisual;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> ShieldScanLine;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> ShieldFrameTop;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> ShieldFrameBottom;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> ShieldFrameLeft;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
+    TObjectPtr<UStaticMeshComponent> ShieldFrameRight;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
     TObjectPtr<UPointLightComponent> ShieldLight;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
@@ -57,9 +75,6 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Ciberfantasma|Presentation")
     TObjectPtr<UStaticMeshComponent> MuzzleFlashVisual;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|VFX")
-    TObjectPtr<UNiagaraSystem> MuzzleFlashSystem;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|VFX")
     TObjectPtr<UNiagaraSystem> ShieldAbsorbSystem;
@@ -71,7 +86,13 @@ protected:
     TObjectPtr<UAnimSequence> IdleAnimation;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
+    TObjectPtr<UAnimSequence> RunStartAnimation;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
     TObjectPtr<UAnimSequence> RunAnimation;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
+    TObjectPtr<UAnimSequence> RunStopAnimation;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
     TObjectPtr<UAnimSequence> JumpStartAnimation;
@@ -89,7 +110,13 @@ protected:
     TObjectPtr<UAnimSequence> CrouchAnimation;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
+    TObjectPtr<UAnimSequence> CrouchWalkAnimation;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
     TObjectPtr<UAnimSequence> FireAnimation;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
+    TObjectPtr<UAnimSequence> FireBackAnimation;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Ciberfantasma|Animation")
     TObjectPtr<UAnimSequence> ShieldAnimation;
@@ -122,6 +149,14 @@ protected:
     void OnHealthChanged(int32 Current, int32 Maximum);
 
 private:
+    enum class EGroundLocomotionPhase : uint8
+    {
+        Idle,
+        Starting,
+        Running,
+        Stopping
+    };
+
     void MoveRight(float Value);
     void StartJump();
     void StopJump();
@@ -142,13 +177,20 @@ private:
     void TriggerCharacterAnimation(UAnimSequence* Animation, float LockDuration, float PlayRate = 1.0f);
     void TriggerAdditiveAnimation(UAnimSequence* Animation, float Duration, float PlayRate = 1.0f);
     void UpdateAnimationGraph(float DeltaSeconds);
+    void UpdateFootIK(float DeltaSeconds);
     void UpdateAutomatedAnimationTest(float DeltaSeconds);
     void UpdateAutomatedEnemyTest(float DeltaSeconds);
-    UAnimSequencerInstance* GetHeroAnimInstance() const;
+    void UpdateAutomatedCrouchWalkTest(float DeltaSeconds);
+    void UpdateAutomatedReverseFireTest(float DeltaSeconds);
+    void UpdateAutomatedLocomotionTransitionTest(float DeltaSeconds);
+    void UpdateAutomatedFootIKTest(float DeltaSeconds);
+    bool SampleFootGround(FName FootBone, FVector& OutOffset, FQuat& OutRotation) const;
+    UCFHeroAnimInstance* GetHeroAnimInstance() const;
     void SetShieldPresentation(bool bActive);
     bool CanAct() const;
 
     float FacingDirection = 1.0f;
+    float ActiveFireDirection = 1.0f;
     float FireCooldownRemaining = 0.0f;
     float ShieldRemaining = 0.0f;
     float ShieldCooldownRemaining = 0.0f;
@@ -156,7 +198,11 @@ private:
     float AnimationLockRemaining = 0.0f;
     float MuzzleFlashRemaining = 0.0f;
     float CameraLandingOffset = 0.0f;
+    float MovementInputValue = 0.0f;
+    float GroundLocomotionPhaseTime = 0.0f;
+    EGroundLocomotionPhase GroundLocomotionPhase = EGroundLocomotionPhase::Idle;
     bool bWasGrounded = true;
+    bool bLastShotContralateral = false;
     FVector CheckpointLocation = FVector::ZeroVector;
     TObjectPtr<UAnimSequence> CurrentBaseAnimation;
     TObjectPtr<UAnimSequence> PreviousBaseAnimation;
@@ -174,9 +220,30 @@ private:
     bool bCurrentBaseLooping = true;
     bool bPreviousBaseLooping = true;
     bool bAutomatedAnimationTest = false;
+    bool bAutomatedDirectionTestPassed = true;
     float AutomatedTestTime = 0.0f;
     int32 AutomatedTestStage = 0;
     bool bAutomatedEnemyTest = false;
     float AutomatedEnemyTestTime = 0.0f;
     int32 AutomatedEnemyTestStage = 0;
+    bool bAutomatedCrouchWalkTest = false;
+    float AutomatedCrouchWalkTestTime = 0.0f;
+    int32 AutomatedCrouchWalkTestStage = 0;
+    float AutomatedCrouchWalkSampleTime = 0.0f;
+    bool bAutomatedReverseFireTest = false;
+    float AutomatedReverseFireTestTime = 0.0f;
+    int32 AutomatedReverseFireTestStage = 0;
+    bool bAutomatedLocomotionTransitionTest = false;
+    float AutomatedLocomotionTransitionTestTime = 0.0f;
+    int32 AutomatedLocomotionTransitionTestStage = 0;
+    FVector LeftFootIKOffset = FVector::ZeroVector;
+    FVector RightFootIKOffset = FVector::ZeroVector;
+    FQuat LeftFootIKRotation = FQuat::Identity;
+    FQuat RightFootIKRotation = FQuat::Identity;
+    float PelvisIKOffset = 0.0f;
+    float FootIKAlpha = 0.0f;
+    bool bLeftFootHasGround = false;
+    bool bRightFootHasGround = false;
+    bool bAutomatedFootIKTest = false;
+    float AutomatedFootIKTestTime = 0.0f;
 };

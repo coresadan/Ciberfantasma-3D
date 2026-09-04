@@ -6,7 +6,7 @@ Plataformas de accion 2.5D con modelado tridimensional detallado, lectura latera
 
 ## Protagonista
 
-- Altura visual canonica en el mundo: 150 cm.
+- Altura visual canónica del asset procedural V9: 166 cm.
 - Proporcion chibi heroica de unas 2,6 cabezas: la cabeza con capucha ocupa aproximadamente el 38 % de la altura total.
 - Torso compacto, extremidades cortas, guantes expresivos y botas anchas. No volver a proporciones adultas atleticas.
 - Silueta reconocible en negro incluso sin iluminacion de color.
@@ -71,10 +71,15 @@ Una captura sin HUD debe funcionar como una escena 3D terminada: materiales dife
 
 ## Estado del pase actual
 
-- Proporción chibi, capucha, máscara-calavera, visor negro, placas compactas y acentos verdes integrados en un Skeletal Mesh propio.
-- Rig segmentado de 23 huesos y diez clips jugables a 60 FPS enlazados a locomoción, salto, combate, escudo y daño.
-- Paleta del héroe recalibrada para mantener capucha y blindaje negros bajo la iluminación real de juego.
+- Héroe procedural V11 de 53.323 vértices, con proporción chibi y silueta reconstruida contra `ciberfantasma-chibi-turnaround-v1`: capucha única tallada hacia una campana acolchada con frontal menos esférico, mandíbula gráfica más compacta, lentes ampliadas, doble órbita convexa, máscara-calavera estratificada, recorridos de energía abdominal continuos, biseles refinados, armadura curva, botas multicapa y manos completas. Paneles, costuras y circuitos siguen la cabeza y no pueden separarse durante las poses extremas. Su UV0 es un atlas de producción sin solapamientos y con margen uniforme.
+- Rig segmentado de 26 huesos y catorce clips jugables a 60 FPS enlazados a locomoción, salto, combate, escudo y daño. `RunStart` construye anticipación, compresión y primer impulso hasta enlazar con el contacto inicial del bucle; `RunStop` planta el pie adelantado, contrapesa el torso y recupera la pose neutra. Los controles secundarios de capucha se conservan para una futura versión high-poly deformable, pero no rompen la carcasa actual. Además de la marcha agachada de 33 fotogramas, el disparo contralateral es una capa aditiva propia que mantiene la carrera hacia un lado mientras torso, cabeza y brazo emisor disparan al opuesto. Cada acción contiene 234/234 pistas escalares y sus 16.848 claves tienen tangentes auto-limitadas; V10 reduce el vuelo de carrera, estabiliza el agachado y mantiene el aterrizaje con precontacto, compresión sostenida y recuperación por fases.
+- Control Rig de pies terminado con efectores y pole vectors bilaterales. En juego, la pasada final de pose proyecta cada apoyo contra el escenario, inclina las botas con la normal, compensa la pelvis y evita tanto el estiramiento como el efecto de “pegar” el pie de vuelo al suelo. Se reduce durante la carrera y se apaga en salto.
+- Seis materiales de héroe V12 diferencian capucha, traje interior, blindaje negro metálico, hueso, circuitos verdes y visor. Ocho mapas fuente de 2K suministran macrovariación, normales de microdetalle y metallic/roughness/AO empaquetados a las cuatro familias físicas principales. Pulso y escudo conservan su revisión V9; los materiales de enemigo continúan desacoplados en V8.
+- Orientación izquierda/derecha corregida mediante el eje frontal real del FBX y escala positiva, de modo que desplazamiento, mirada y carrera coincidan sin invertir la lateralidad de la animación.
+- `Scripts/audit_hero_animation_bounds.py` audita en Blender geometría, rig, cobertura de pistas y cada fotograma entregado —no sólo claves— antes de importar a Unreal; `audit_hero_foot_contacts.py` exige alternancia, simetría de aterrizaje y cierre de loops.
+- La V11 ha superado las auditorías de Blender y Unreal tras su importación. El build Windows V10 sigue siendo el último paquete distribuible hasta completar el cook V11.
 - Cámara en perspectiva con anticipación lateral y amortiguación.
-- Kit procedural de tres planos aplicado a los nueve actos, con identidad de color diferenciada por mundo.
+- World Art V3 no destructivo aplicado a los nueve actos: skyline estratificado, fachadas modulares profundas, ventanas individuales, coronaciones, cartelería, tráfico lejano, cornisas mecánicas, HVAC, barandillas, niebla y luz diferenciada por mundo.
+- Pase de legibilidad y variedad jugable: pinchos, memoria, trituradoras y vallas láser poseen silueta/luz/movimiento propios; las plataformas de fase telegrafían su apagado y nueve plataformas móviles opcionales crean rutas aéreas alternativas en cuatro actos sin borrar el recorrido de Canvas.
 
-Este pase supera el blockout funcional, pero no equivale todavía al arte final definido arriba: faltan escultura/retopología manual, UV y bakes, texturas de autor, Animation Blueprint con mezclas, animación enemiga específica y decorado único por acto.
+La V11 completa la pasada reproducible de primer plano, silueta, superficies 2K y contactos, además de UV, materiales PBR, Control Rig bilateral, IK runtime y pulido cuadro a cuadro. El siguiente salto puramente artístico sigue siendo un high-poly esculpido, retopología de deformación, bake high-to-low de normales/AO/curvatura, texturas 4K de autor, animación enemiga específica y decorado único por acto.

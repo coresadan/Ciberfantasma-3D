@@ -10,6 +10,12 @@ MAP_NAMES = (
     "Act04_MemoryGardens", "Act05_ConsensusFactory", "Act06_SingleArchive",
     "Act07_DeadIdeasAvenue", "Act08_SilenceOffice", "Act09_DirectorOffice",
 )
+ADVENTURE_ROUTE_HAZARDS = {
+    0: (1, 3),
+    2: (0, 2),
+    6: (1, 3, 5),
+    8: (0, 2),
+}
 
 
 def native(name):
@@ -40,17 +46,24 @@ def main():
         wanted = {
             "shards": len(expected["shards"]), "terminals": len(expected["terminals"]),
             "enemies": len(expected["enemies"]), "hazards": len(expected["hazards"]),
-            "portals": 1, "special": len(expected.get("moving", [])) + len(expected.get("phase", [])),
+            "portals": 1,
+            "special": (len(expected.get("moving", [])) + len(expected.get("phase", []))
+                        + len(ADVENTURE_ROUTE_HAZARDS.get(index, ()))),
         }
         if counts != wanted:
             failures.append(f"{map_name}: {counts} expected {wanted}")
         portals = [actor for actor in actors if actor.get_class() == classes["portals"]]
         if portals and portals[0].get_editor_property("level_index") != index:
             failures.append(f"{map_name}: wrong portal level index")
+        hazards = [actor for actor in actors if actor.get_class() == classes["hazards"]]
+        expected_styles = [values[4] if len(values) > 4 else "spikes" for values in expected["hazards"]]
+        actual_styles = [str(actor.get_editor_property("hazard_style")) for actor in hazards]
+        if sorted(actual_styles) != sorted(expected_styles):
+            failures.append(f"{map_name}: hazard styles {actual_styles} expected {expected_styles}")
         unreal.log(f"AUDIT {map_name}: {counts}")
     if failures:
         raise RuntimeError("Campaign audit failed: " + "; ".join(failures))
-    unreal.log("CAMPAIGN AUDIT PASSED: all nine maps match Canvas gameplay data")
+    unreal.log("CAMPAIGN AUDIT PASSED: Canvas route preserved, hazard identities and adventure routes verified")
 
 
 if __name__ == "__main__":
